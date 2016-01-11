@@ -1,2 +1,2 @@
-from ormless import convert, tuplize
+from ormless import convert, tuplize, typed
 from . import annotations

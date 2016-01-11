@@ -7,7 +7,6 @@ from utils import flip
 
 ANamedTuple = partial(namedtuple, 'ANamedTuple')
 
-
 class AClass:
     attr1 = 'abc'
     attr2 = 100
@@ -83,3 +82,31 @@ def test_convert_only_first_kwarg():
         "The first keyword argument is not converted")
     assert kwarg2 == returned_kwarg2, (
         "The second keyword argument is changed")
+
+
+ATypedNamedTuple = partial(typed, partial(namedtuple, 'ANamedTuple1'))
+
+
+class AParentClass:
+    attr1 = 'efg'
+    attr2 = AClass()
+
+
+def test_convert_one_typed():
+    @convert
+    @types(
+        ATypedNamedTuple(
+            ['attr1', 'attr2'],
+            {'attr1': str,
+             'attr2' : ANamedTuple(['attr1', 'attr2']),
+             }))
+    def f(arg1):
+        return arg1
+
+    arg_type = f.__annotations__['arg1']
+    arg_field_type = arg_type._field_types['attr2']
+    converted_arg = f(AParentClass())
+    assert isinstance(converted_arg, arg_type), (
+        "The argument is not converted")
+    assert isinstance(converted_arg.attr2, arg_field_type), (
+        "The argument's field is not converted")
