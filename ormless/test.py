@@ -42,11 +42,11 @@ def test_convert_only_first():
 
 def test_convert_multi():
     @convert
-    @types(ANamedTuple(['attr1', 'attr2']))
+    @types([ANamedTuple(['attr1', 'attr2'])])
     def f(arg1):
         return arg1
 
-    arg_type = f.__annotations__['arg1']
+    arg_type = f.__annotations__['arg1'][0]
     converted_args = f([AClass(), AClass()])
     is_arg_type = partial(flip(isinstance), arg_type)
     assert len(converted_args), (

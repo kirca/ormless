@@ -6,6 +6,23 @@ from operator import contains
 def get_second(iterable):
     return iterable[1]
 
+def extract_type(arg_type):
+    is_collection = False
+    if isinstance(arg_type, list):
+        if len(arg_type) != 1:
+            raise ValueError("The type declaration %s "
+                             "is incorrect. If you want to "
+                             "specify a collection"
+                             "it must be a list of one type."
+                             % arg_type)
+        arg_type = arg_type[0]
+        is_collection = True
+    if type(arg_type) is not type:
+        raise ValueError("The type declaration %s "
+                         "is incorrect. It is not a valid type"
+                         % arg_type)
+    return (is_collection, arg_type)
+
 
 def tuplize(ntuple, attrs, obj):
     def apply_to_second(f, tupl):
@@ -18,11 +35,15 @@ def tuplize(ntuple, attrs, obj):
         return attr[1]
 
     def to_tuplize(attr):
-        return hasattr(attr[2], '_fields')
+        return (
+            hasattr(attr[2][0], '_fields')
+            if isinstance(attr[2], list)
+            else hasattr(attr[2], '_fields'))
 
     def tuplize_recur(attr):
         attr_name, attr_val, attr_type = attr
-        if hasattr(attr_val, '__iter__') and len(attr_val) > 1:
+        is_collection, attr_type = extract_type(attr_type)
+        if is_collection:
             return map(partial(tuplize, attr_type, attr_type._fields),
                        attr_val)
         return tuplize(attr_type, attr_type._fields, attr_val)
@@ -35,8 +56,7 @@ def tuplize(ntuple, attrs, obj):
         enumerate(starmap(get_type, izip(attrs, attr_vals))))
     attrs_to_tuplize = filter(lambda x: to_tuplize(x[1]), attrs_with_types)
     attrs_not_tuplize = map(partial(apply_to_second, get_val),
-                            list(set(attrs_with_types) -
-                                 set(attrs_to_tuplize)))
+                            ifilterfalse(partial(contains, attrs_to_tuplize), attrs_with_types))
     tuplized_attrs = map(partial(apply_to_second, tuplize_recur), attrs_to_tuplize)
     attr_vals = map(
         get_second,
@@ -49,10 +69,11 @@ def convert(func):
     @wraps(func)
     def func_wrapper(*args, **kwargs):
         def _convert(key, arg):
-            arg_type = func.__annotations__[key]
+            is_collection, arg_type = extract_type(func.__annotations__[key])
+
             if hasattr(arg_type, '_fields'):
                 _tuplize = partial(tuplize, arg_type, arg_type._fields)
-                if hasattr(arg, '__iter__') and len(arg) > 1:
+                if is_collection:
                     return (key, map(_tuplize, arg))
                 return (key, _tuplize(arg))
             return (key, arg)
