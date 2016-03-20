@@ -1,5 +1,6 @@
-
-# from https://blog.vrplumber.com/b/2015/01/22/type-declarations-python-27/
+# coding=utf-8
+#
+# Obtained from https://blog.vrplumber.com/b/2015/01/22/type-declarations-python-27/
 
 
 def _func_annotation_for(func):

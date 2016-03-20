@@ -1,11 +1,22 @@
-from ormless import *
-from annotations import types
+# coding=utf-8
+#
+# This file is part of ORMless (https://github.com/kirca/ormless)
+#
+# Copyright (c) 2016 Kiril Vangelovski (k.vangelovski@gmail.com)
+#
+# This Source Code Form is subject to the terms of the MIT License
+# If a copy of the licence was not distributed with this file, You can
+# obtain one at https://opensource.org/licenses/MIT .
+
+from ormless import convert, typed
+from ormless.annotations import types
+from ormless.utils import flip
 from functools import partial
 from collections import namedtuple
-from utils import flip
 
 
 ANamedTuple = partial(namedtuple, 'ANamedTuple')
+
 
 class AClass:
     attr1 = 'abc'
@@ -61,7 +72,7 @@ def test_convert_kwargs():
     def f(kwarg1=None):
         return kwarg1
 
-    kwarg_type = f.__annotations__['kwarg1'] 
+    kwarg_type = f.__annotations__['kwarg1']
     converted_kwarg = f(AClass())
     assert isinstance(converted_kwarg, kwarg_type), (
         "The keyword argument is not converted")
@@ -98,7 +109,7 @@ def test_convert_one_typed():
         ATypedNamedTuple(
             ['attr1', 'attr2'],
             {'attr1': str,
-             'attr2' : ANamedTuple(['attr1', 'attr2']),
+             'attr2': ANamedTuple(['attr1', 'attr2']),
              }))
     def f(arg1):
         return arg1
